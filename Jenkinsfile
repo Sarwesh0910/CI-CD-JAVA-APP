@@ -20,7 +20,7 @@ pipeline {
     stage('Build & Test') {
       steps {
         echo '🔧 Running Maven build and tests...'
-        sh 'mvn clean test'
+        bat 'mvn clean test'
       }
     }
 
@@ -28,7 +28,7 @@ pipeline {
       steps {
         echo '📊 Running SonarQube analysis...'
         withSonarQubeEnv('sonar_server') {
-          sh 'mvn sonar:sonar'
+          bat 'mvn sonar:sonar'
         }
       }
     }
@@ -44,8 +44,8 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        echo "🐳 Building Docker image: $DOCKER_IMAGE"
-        sh "docker build -t $DOCKER_IMAGE ."
+        echo "🐳 Building Docker image: %DOCKER_IMAGE%"
+        bat "docker build -t %DOCKER_IMAGE% ."
       }
     }
 
@@ -53,9 +53,9 @@ pipeline {
       steps {
         echo '📦 Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh """
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker push $DOCKER_IMAGE
+          bat """
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+            docker push %DOCKER_IMAGE%
           """
         }
       }
@@ -64,7 +64,7 @@ pipeline {
     stage('Deploy Locally') {
       steps {
         echo '🚀 Deploying container locally on port 8080...'
-        sh "docker run -d -p 8080:8080 $DOCKER_IMAGE"
+        bat "docker run -d -p 8080:8080 %DOCKER_IMAGE%"
       }
     }
   }
