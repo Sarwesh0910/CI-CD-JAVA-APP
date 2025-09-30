@@ -13,7 +13,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git 'https://github.com/sarweshvaran/my-java-app.git' // Replace after repo is created
+        git 'https://github.com/Sarwesh0910/CI-CD-JAVA-APP.git'
       }
     }
 
