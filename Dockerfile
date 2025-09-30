@@ -5,7 +5,6 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built JAR file into the container
-# Use wildcard to avoid hardcoding version
 COPY target/*.jar app.jar
 
 # Expose the application port
