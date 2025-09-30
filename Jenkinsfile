@@ -26,7 +26,7 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        echo '📊 Running SonarQube analysis...'
+        echo ' Running SonarQube analysis...'
         withSonarQubeEnv('sonar_server') {
           bat 'mvn sonar:sonar'
         }
@@ -35,8 +35,8 @@ pipeline {
 
     stage('Quality Gate') {
       steps {
-        echo '⏳ Waiting for SonarQube quality gate result...'
-        timeout(time: 1, unit: 'MINUTES') {
+        echo ' Waiting for SonarQube quality gate result...'
+        timeout(time: 5, unit: 'MINUTES') {
           waitForQualityGate abortPipeline: true
         }
       }
@@ -44,14 +44,14 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        echo "🐳 Building Docker image: %DOCKER_IMAGE%"
+        echo " Building Docker image: %DOCKER_IMAGE%"
         bat "docker build -t %DOCKER_IMAGE% ."
       }
     }
 
     stage('Push to DockerHub') {
       steps {
-        echo '📦 Pushing image to DockerHub...'
+        echo ' Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           bat """
             echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
@@ -63,7 +63,7 @@ pipeline {
 
     stage('Deploy Locally') {
       steps {
-        echo '🚀 Deploying container locally on port 8080...'
+        echo ' Deploying container locally on port 8080...'
         bat "docker run -d -p 8080:8080 %DOCKER_IMAGE%"
       }
     }
@@ -71,13 +71,13 @@ pipeline {
 
   post {
     success {
-      echo '🎉 Pipeline completed successfully!'
+      echo ' Pipeline completed successfully!'
     }
     failure {
-      echo '❌ Pipeline failed. Check logs for details.'
+      echo ' Pipeline failed. Check logs for details.'
     }
     always {
-      echo '📁 Archiving build artifacts...'
+      echo ' Archiving build artifacts...'
       archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
     }
   }
