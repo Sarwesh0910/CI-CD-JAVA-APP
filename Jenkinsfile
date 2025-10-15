@@ -36,9 +36,9 @@ pipeline {
       }
     }
 
-    stage('Docker Build') {
+    stage('Docker Build & Login') {
       steps {
-        echo "🐳 Logging in and building Docker image: %DOCKER_IMAGE%"
+        echo "🐳 Logging in and building Docker image: ${DOCKER_IMAGE}"
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           bat """
             echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
@@ -48,24 +48,36 @@ pipeline {
       }
     }
 
+    stage('Verify Docker Image') {
+      steps {
+        echo '🔍 Verifying Docker image before push...'
+        bat "docker images | findstr my-java-app"
+      }
+    }
+
     stage('Push to DockerHub') {
       steps {
         echo '📦 Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          bat """
-            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-            docker tag sarweshvaran/my-java-app %DOCKER_USER%/my-java-app:latest
-            docker push %DOCKER_USER%/my-java-app:latest
-          """
+          retry(2) {
+            bat """
+              echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+              docker push %DOCKER_IMAGE%
+            """
+          }
         }
       }
     }
 
-
     stage('Deploy Locally') {
       steps {
-        echo '🚀 Deploying container locally on port 8080...'
-        bat "docker run -d -p 8080:8080 %DOCKER_IMAGE%"
+        echo '🚀 Deploying container locally...'
+        script {
+          def portCheck = bat(script: 'netstat -ano | findstr :8080', returnStatus: true)
+          def deployPort = (portCheck == 0) ? '9090' : '8080'
+          echo "Using port ${deployPort} for deployment"
+          bat "docker run -d -p ${deployPort}:8080 ${DOCKER_IMAGE}"
+        }
       }
     }
   }
