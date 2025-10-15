@@ -52,17 +52,15 @@ pipeline {
       steps {
         echo '📦 Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          retry(2) {
-            bat """
-              echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-              docker tag sarweshvaran/my-java-app %DOCKER_USER%/my-java-app:latest
-              docker push %DOCKER_USER%/my-java-app:latest
-              IF %ERRORLEVEL% NEQ 0 exit /b 1
-            """
-          }
+          bat """
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+            docker tag sarweshvaran/my-java-app %DOCKER_USER%/my-java-app:latest
+            docker push %DOCKER_USER%/my-java-app:latest
+          """
         }
       }
     }
+
 
     stage('Deploy Locally') {
       steps {
