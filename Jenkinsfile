@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE = 'sarweshvaran/my-java-app:latest'
+    DOCKER_IMAGE = 'sarweshvaran/my-java-app'
     DOCKER_CREDENTIALS_ID = 'Dockerhub-key'
   }
 
@@ -20,7 +20,7 @@ pipeline {
     stage('Build & Package') {
       steps {
         echo '🔧 Running Maven build and packaging...'
-        bat 'mvn clean package -DskipTests'
+        bat 'mvn clean package'
       }
     }
 
@@ -54,14 +54,10 @@ pipeline {
       steps {
         echo '📦 Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          retry(2) {
-            bat """
-              echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-              docker tag sarweshvaran/my-java-app %DOCKER_USER%/my-java-app:latest
-              docker push %DOCKER_USER%/my-java-app:latest
-              IF %ERRORLEVEL% NEQ 0 exit /b 1
-            """
-          }
+          bat """
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+            docker push %DOCKER_IMAGE%
+          """
         }
       }
     }
@@ -83,7 +79,7 @@ pipeline {
     }
     always {
       echo '📁 Archiving build artifacts...'
-      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+      archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
     }
   }
 }
