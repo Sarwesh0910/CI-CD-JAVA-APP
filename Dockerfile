@@ -1,10 +1,10 @@
 # -------- Stage 1: Build the application --------
-FROM maven:3.8.7-eclipse-temurin-17 AS builder
+FROM maven:3.8.7-openjdk-17 AS builder
 
 # Set working directory
 WORKDIR /build
 
-# Copy Maven project files
+# Copy project files
 COPY pom.xml .
 COPY src ./src
 
@@ -24,4 +24,4 @@ COPY --from=builder /build/target/*.jar app.jar
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]
