@@ -13,6 +13,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        echo '🔍 Checking out source code...'
         git branch: 'main', url: 'https://github.com/Sarwesh0910/CI-CD-JAVA-APP.git'
       }
     }
