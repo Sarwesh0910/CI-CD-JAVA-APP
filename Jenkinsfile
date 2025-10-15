@@ -2,7 +2,8 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE = 'sarweshvaran/my-java-app:latest'
+    DOCKER_USER = 'sarweshvaran'
+    DOCKER_IMAGE = "${DOCKER_USER}/my-java-app:latest"
     DOCKER_CREDENTIALS_ID = 'Dockerhub-key'
   }
 
@@ -36,9 +37,9 @@ pipeline {
       }
     }
 
-    stage('Docker Build & Login') {
+    stage('Docker Build') {
       steps {
-        echo "🐳 Logging in and building Docker image: ${DOCKER_IMAGE}"
+        echo "🐳 Building Docker image: ${DOCKER_IMAGE}"
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           bat """
             echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
@@ -76,6 +77,11 @@ pipeline {
           def portCheck = bat(script: 'netstat -ano | findstr :8080', returnStatus: true)
           def deployPort = (portCheck == 0) ? '9090' : '8080'
           echo "Using port ${deployPort} for deployment"
+
+          // Optional: stop any existing container with same image
+          bat "docker ps -q --filter ancestor=${DOCKER_IMAGE} | for /f %%i in ('more') do docker rm -f %%i"
+
+          // Run new container
           bat "docker run -d -p ${deployPort}:8080 ${DOCKER_IMAGE}"
         }
       }
