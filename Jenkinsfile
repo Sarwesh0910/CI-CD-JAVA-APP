@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE = 'sarweshvaran/my-java-app'
+    DOCKER_IMAGE = 'sarweshvaran/my-java-app:latest'
     DOCKER_CREDENTIALS_ID = 'Dockerhub-key'
   }
 
@@ -14,13 +14,6 @@ pipeline {
     stage('Checkout') {
       steps {
         git branch: 'main', url: 'https://github.com/Sarwesh0910/CI-CD-JAVA-APP.git'
-      }
-    }
-
-    stage('Build & Package') {
-      steps {
-        echo '🔧 Running Maven build and packaging...'
-        bat 'mvn clean package'
       }
     }
 
@@ -44,9 +37,13 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        echo "🐳 Building Docker image: %DOCKER_IMAGE%"
-        bat 'if not exist target\\*.jar exit /b 1'
-        bat "docker build -t %DOCKER_IMAGE% ."
+        echo "🐳 Logging in and building Docker image: %DOCKER_IMAGE%"
+        withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          bat """
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+            docker build -t %DOCKER_IMAGE% .
+          """
+        }
       }
     }
 
@@ -54,10 +51,14 @@ pipeline {
       steps {
         echo '📦 Pushing image to DockerHub...'
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          bat """
-            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-            docker push %DOCKER_IMAGE%
-          """
+          retry(2) {
+            bat """
+              echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+              docker tag sarweshvaran/my-java-app %DOCKER_USER%/my-java-app:latest
+              docker push %DOCKER_USER%/my-java-app:latest
+              IF %ERRORLEVEL% NEQ 0 exit /b 1
+            """
+          }
         }
       }
     }
@@ -79,7 +80,7 @@ pipeline {
     }
     always {
       echo '📁 Archiving build artifacts...'
-      archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+      archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
     }
   }
 }
