@@ -1,17 +1,25 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>com.sarweshvaran</groupId>
   <artifactId>my-java-app</artifactId>
   <version>1.0</version>
   <packaging>jar</packaging>
 
+  <name>My Java App</name>
+  <description>A sample Java application for CI/CD pipeline testing</description>
+  <url>http://localhost:9000</url> <!-- Replace with your ngrok URL if needed -->
+
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <sonar.projectKey>sonar-key</sonar.projectKey>
+    <sonar.host.url>https://your-ngrok-url.ngrok.io</sonar.host.url> <!-- Replace with actual ngrok URL -->
+    <sonar.login>your-sonar-token</sonar.login> <!-- Replace with your actual token -->
   </properties>
 
   <dependencies>
@@ -22,4 +30,14 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>4.0.0.412</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>
